@@ -24,6 +24,6 @@
             android:ems="10"
             android:id="@+id/editText"
             android:layout_gravity="center_horizontal"
-            android:text="endpoint@address" />
+            android:hint="endpoint@address" />
     </LinearLayout>
 </RelativeLayout>
