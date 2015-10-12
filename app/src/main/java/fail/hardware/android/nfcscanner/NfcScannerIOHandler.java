@@ -15,16 +15,23 @@ import io.socket.emitter.Emitter;
 
 public class NfcScannerIOHandler {
     Socket client;
+    final Application app;
+    final String address;
+    final String endpoint;
+
+    EndpointMessageListener listener;
+
+
     public NfcScannerIOHandler(String ident, Application hnd) {
-        final Application handler = hnd;
-        if(!ident.contains("@"))
-            throw new RuntimeException("Failde to parse ident, missing @");
+        app = hnd;
+        if (!ident.contains("@"))
+            throw new RuntimeException("Failed to parse ident, missing @");
         String[] parts = ident.split("@");
-        if(parts.length != 2)
+        if (parts.length != 2)
             throw new RuntimeException("Failed to parse ident, unexpected length");
 
-        final String endpoint = parts[0];
-        String address = parts[1];
+        endpoint = parts[0];
+        address = parts[1];
         IO.Options opts = new IO.Options();
         opts.reconnection = true;
         try {
@@ -33,12 +40,14 @@ public class NfcScannerIOHandler {
             e.printStackTrace();
             throw new RuntimeException("Failed to connect to address, invalid format");
         }
+    }
+    public void connect() {
 
         client.on(Socket.EVENT_CONNECT, new Emitter.Listener() {
             @Override
             public void call(Object... args) {
                 Log.d("NfcScanner", "Connected to middleware, sending scanner.register");
-                String id = Settings.Secure.getString(handler.getContentResolver(),
+                String id = Settings.Secure.getString(app.getContentResolver(),
                         Settings.Secure.ANDROID_ID);
                 JSONObject obj = new JSONObject();
                 try {
@@ -72,5 +81,20 @@ public class NfcScannerIOHandler {
         });
         client.connect();
         Log.d("NfcScanner", "Connecting");
+    }
+
+    public void setEndpointMessageListener(EndpointMessageListener listener)
+    {
+        this.listener = listener;
+    }
+
+    class EndpointMessage {
+        public String message;
+        public JSONObject payload;
+    }
+    class EndpointMessageListener {
+        public void message(EndpointMessage message) {
+
+        }
     }
 }

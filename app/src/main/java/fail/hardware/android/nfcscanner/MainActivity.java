@@ -28,7 +28,7 @@ public class MainActivity extends AppCompatActivity {
                         .setAction("Action", null).show();
                 EditText txt = (EditText)findViewById(R.id.editText);
                 String address = txt.getText().toString();
-                //NfcScannerIOHandler handler = new NfcScannerIOHandler(address, getApplication());
+                //NfcScannerIOHandler app = new NfcScannerIOHandler(address, getApplication());
                 Intent scanner = new Intent(self, ScannerActivity.class);
                 scanner.putExtra("ident", address);
                 self.startActivity(scanner);
