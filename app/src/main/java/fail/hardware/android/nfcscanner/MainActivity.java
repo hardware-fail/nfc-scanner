@@ -24,8 +24,7 @@ public class MainActivity extends AppCompatActivity {
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Snackbar.make(view, "Connecting to server", Snackbar.LENGTH_LONG)
-                        .setAction("Action", null).show();
+
                 EditText txt = (EditText)findViewById(R.id.editText);
                 String address = txt.getText().toString();
                 //NfcScannerIOHandler app = new NfcScannerIOHandler(address, getApplication());

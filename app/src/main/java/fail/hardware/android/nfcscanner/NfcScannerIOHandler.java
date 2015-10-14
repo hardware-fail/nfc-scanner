@@ -41,23 +41,29 @@ public class NfcScannerIOHandler {
             throw new RuntimeException("Failed to connect to address, invalid format");
         }
     }
+
+    private JSONObject getTransmitBlock() {
+        String id = Settings.Secure.getString(app.getContentResolver(),
+                Settings.Secure.ANDROID_ID);
+        JSONObject obj = new JSONObject();
+        try {
+            obj.put("device_id", id);
+            obj.put("device_name", android.os.Build.MODEL);
+            obj.put("endpoint", endpoint);
+        } catch (JSONException e) {
+            e.printStackTrace();
+            return null;
+        }
+        return obj;
+    }
     public void connect() {
 
         client.on(Socket.EVENT_CONNECT, new Emitter.Listener() {
             @Override
             public void call(Object... args) {
                 Log.d("NfcScanner", "Connected to middleware, sending scanner.register");
-                String id = Settings.Secure.getString(app.getContentResolver(),
-                        Settings.Secure.ANDROID_ID);
-                JSONObject obj = new JSONObject();
-                try {
-                    obj.put("device_id", id);
-                    obj.put("device_name", android.os.Build.MODEL);
-                    obj.put("endpoint", endpoint);
-                } catch (JSONException e) {
-                    e.printStackTrace();
-                    return;
-                }
+
+                JSONObject obj = getTransmitBlock();
 
                 client.emit("scanner.register", obj);
                 Log.d("NfcScanner", "Sent scanner.register");
@@ -83,18 +89,22 @@ public class NfcScannerIOHandler {
         Log.d("NfcScanner", "Connecting");
     }
 
-    public void setEndpointMessageListener(EndpointMessageListener listener)
-    {
+    public void setEndpointMessageListener(EndpointMessageListener listener) {
         this.listener = listener;
     }
 
-    class EndpointMessage {
-        public String message;
-        public JSONObject payload;
-    }
-    class EndpointMessageListener {
-        public void message(EndpointMessage message) {
+    public void sendScannedCard(int id) throws JSONException {
+        JSONObject obj = getTransmitBlock();
+        obj.put("card_id", id);
 
-        }
+        client.emit("scanner.scanned", obj);
     }
+
+}
+class EndpointMessage {
+    public String message;
+    public JSONObject payload;
+}
+abstract class EndpointMessageListener {
+    public abstract void message(EndpointMessage message);
 }

@@ -13,6 +13,7 @@ import android.nfc.tech.NfcA;
 import android.nfc.tech.NfcB;
 import android.nfc.tech.NfcF;
 import android.nfc.tech.NfcV;
+import android.support.design.widget.Snackbar;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -21,6 +22,8 @@ import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.TextView;
+
+import org.json.JSONException;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -54,6 +57,8 @@ public class ScannerActivity extends AppCompatActivity {
     private View mControlsView;
     private boolean mVisible;
 
+    private NfcScannerIOHandler ioHandler;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -64,6 +69,19 @@ public class ScannerActivity extends AppCompatActivity {
         mControlsView = findViewById(R.id.fullscreen_content_controls);
         mContentView = findViewById(R.id.fullscreen_content);
 
+        String ident = "";
+        Bundle ext = getIntent().getExtras();
+        if(ext != null)
+            ident = ext.getString("ident");
+
+        ioHandler = new NfcScannerIOHandler(ident, getApplication());
+        ioHandler.setEndpointMessageListener(new EndpointMessageListener() {
+
+            @Override
+            public void message(EndpointMessage message) {
+                Log.d("NfcScanner", "handler fired");
+            }
+        });
 
         // Set up the user interaction to manually show or hide the system UI.
         mContentView.setOnClickListener(new View.OnClickListener() {
@@ -86,6 +104,11 @@ public class ScannerActivity extends AppCompatActivity {
         // created, to briefly hint to the user that UI controls
         // are available.
         delayedHide(100);
+
+        if(ioHandler != null) {
+            Notify("Trying to connect");
+            ioHandler.connect();
+        }
     }
 
     /**
@@ -231,10 +254,23 @@ public class ScannerActivity extends AppCompatActivity {
             // SCANNED
             byte[] id = intent.getByteArrayExtra(NfcAdapter.EXTRA_ID);
 
-            String text = String.format("%d", ByteArrayToReverseInteger(id));
+            int card_id = ByteArrayToReverseInteger(id);
+            String text = String.format("%d", card_id);
             Log.d("NfcScanner", text);
+            try {
+                ioHandler.sendScannedCard(card_id);
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
         }
     }
+
+    void Notify(String message) {
+        View view = findViewById(R.id.fullscreen_content);
+        Snackbar.make(view, message, Snackbar.LENGTH_LONG)
+                .setAction("Action", null).show();
+    }
+
     private int ByteArrayToReverseInteger(byte[] arr) {
         Byte[] arrnew = new Byte[arr.length];
         int i = 0;
